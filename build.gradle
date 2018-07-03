@@ -277,7 +277,7 @@ jfx {
     vendor               = qupathVendor
     nativeReleaseVersion = qupathVersion
     appName              = 'QuPath'
-    bundler              = nativeBundle
+    bundler              = "ALL"
 
     // Necessary for native libraries, licenses & changelog
     copyAdditionalAppResourcesToJar = true
