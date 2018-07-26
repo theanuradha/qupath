@@ -1228,6 +1228,33 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 		}
 	}
 
+
+	public void showDropboxDialog() {
+        // Show a setup message
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Connect to Dropbox");
+        dialog.initOwner(getStage());
+
+        // Try to get an image to display
+        Image img = loadDropboxIcon(128);
+        BorderPane pane = new BorderPane();
+        if (img != null) {
+            StackPane imagePane = new StackPane(new ImageView(img));
+            imagePane.setPadding(new Insets(10, 10, 10, 10));
+            pane.setLeft(imagePane);
+        }
+
+        ParameterList paramsSetup = new ParameterList()
+                .addTitleParameter("Dropbox")
+                .addEmptyParameter("dropboxString", "You can chose to sync your project with Dropbox or " +
+                        "click \"Cancel\" to use it locally");
+
+        ParameterPanelFX parameterPanel = new ParameterPanelFX(paramsSetup);
+        pane.setCenter(parameterPanel.getPane());
+        dialog.getDialogPane().setContent(pane);
+        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        Optional<ButtonType> result = dialog.showAndWait();
+    }
 	
 	/**
 	 * Show a dialog requesting setup parameters
@@ -1450,17 +1477,30 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 	
 	private Image loadIcon(int size) {
 		String path = "icons/QuPath_" + size + ".png";
-		try (InputStream stream = getClassLoader().getResourceAsStream(path)) {
-			if (stream != null) {
-				BufferedImage img = ImageIO.read(stream);
-				if (img != null)
-					return SwingFXUtils.toFXImage(img, null);
-			}
-		} catch (IOException e) {
-			logger.error("Unable to read icon from " + path);
-		}
-		return null;
+        Image img = getImage(path);
+        if (img != null) return img;
+        return null;
 	}
+
+    private Image loadDropboxIcon(int size) {
+        String path = "icons/dropbox_" + size + ".png";
+        Image img = getImage(path);
+        if (img != null) return img;
+        return null;
+    }
+
+    private Image getImage(String path) {
+        try (InputStream stream = getClassLoader().getResourceAsStream(path)) {
+            if (stream != null) {
+                BufferedImage img = ImageIO.read(stream);
+                if (img != null)
+                    return SwingFXUtils.toFXImage(img, null);
+            }
+        } catch (IOException e) {
+            logger.error("Unable to read icon from " + path);
+        }
+        return null;
+    }
 	
 	
 	/**

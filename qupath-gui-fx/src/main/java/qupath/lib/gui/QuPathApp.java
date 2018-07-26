@@ -84,7 +84,10 @@ public class QuPathApp extends Application {
 					PathPrefs.getUserPreferences().putInt("qupathSetupValue", currentSetup);
 					PathPrefs.savePreferences();
 				}
+				gui.showDropboxDialog();
 			});
+		} else {
+			Platform.runLater(gui::showDropboxDialog);
 		}
 		
 	}
