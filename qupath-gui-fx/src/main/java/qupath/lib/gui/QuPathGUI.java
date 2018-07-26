@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.controlsfx.control.action.ActionUtils.ActionTextBehavior;
@@ -95,38 +97,9 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Control;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.Separator;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.SplitPane.Divider;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextInputControl;
-import javafx.scene.control.TitledPane;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.ToolBar;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.TreeTableView;
-import javafx.scene.control.TreeView;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -139,11 +112,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.RotateEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.ZoomEvent;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Rectangle;
@@ -1244,16 +1212,39 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
             pane.setLeft(imagePane);
         }
 
-        ParameterList paramsSetup = new ParameterList()
-                .addTitleParameter("Dropbox")
-                .addEmptyParameter("dropboxString", "You can chose to sync your project with Dropbox or " +
-                        "click \"Cancel\" to use it locally");
+		GridPane grid = new GridPane();
+		grid.setAlignment(Pos.CENTER);
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(25, 25, 25, 25));
 
-        ParameterPanelFX parameterPanel = new ParameterPanelFX(paramsSetup);
-        pane.setCenter(parameterPanel.getPane());
+		Label helpText = new Label("You can chose to sync your project with Dropbox or to use it locally");
+		grid.add(helpText, 0, 0);
+
+		Label userName = new Label("User Name:");
+		grid.add(userName, 0, 2);
+
+		TextField userTextField = new TextField();
+		grid.add(userTextField, 1, 2);
+
+		Label pw = new Label("Password:");
+		grid.add(pw, 0, 3);
+
+		PasswordField pwBox = new PasswordField();
+		grid.add(pwBox, 1, 3);
+
+		ButtonType connectBtn = new ButtonType("Connect", ButtonData.OK_DONE);
+        pane.setCenter(grid);
         dialog.getDialogPane().setContent(pane);
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().setAll(new ButtonType("Use local files"), connectBtn);
         Optional<ButtonType> result = dialog.showAndWait();
+
+		if (result.isPresent() && connectBtn.equals(result.get())) {
+			String username = userTextField.getText();
+			String password = pwBox.getText();
+			PathCommand dropboxConnectCommand = new DropboxConnectCommand(this, username, password);
+			dropboxConnectCommand.run();
+		}
     }
 	
 	/**
