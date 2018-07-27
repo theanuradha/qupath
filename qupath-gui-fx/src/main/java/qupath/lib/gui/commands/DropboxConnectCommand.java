@@ -41,13 +41,12 @@ public class DropboxConnectCommand implements PathCommand {
 
 
         // Read app info file (contains app key and app secret)
-        URL dropboxJsonUrl = ClassLoader.getSystemClassLoader().getResource("dropbox.json");
+        URL dropboxJsonUrl = this.getClass().getResource("/dropbox.json");
         DbxAppInfo appInfo;
         try {
             appInfo = DbxAppInfo.Reader.readFromFile(dropboxJsonUrl.getPath());
         } catch (JsonReader.FileLoadException ex) {
             System.err.println("Error reading <app-info-file>: " + ex.getMessage());
-            System.exit(1);
             return;
         }
 
@@ -56,6 +55,7 @@ public class DropboxConnectCommand implements PathCommand {
         DbxRequestConfig requestConfig = new DbxRequestConfig("qupath_projects_business");
         // TODO we need to use the "Token" connect instead of the "code" connect
         // https://github.com/dropbox/dropbox-sdk-java/blob/master/examples/authorize/src/main/java/com/dropbox/core/examples/authorize/Main.java
+
         DbxWebAuth webAuth = new DbxWebAuth(requestConfig, appInfo);
         DbxWebAuth.Request webAuthRequest = DbxWebAuth.newRequestBuilder()
                 .withNoRedirect()

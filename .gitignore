@@ -1,4 +1,5 @@
 src/main/resources/api.json
+src/main/resources/dropbox.json
 
 # Maven
 deploy/
