@@ -1198,53 +1198,9 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 
 
 	public void showDropboxDialog() {
-        // Show a setup message
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Connect to Dropbox");
-        dialog.initOwner(getStage());
 
-        // Try to get an image to display
-        Image img = loadDropboxIcon(128);
-        BorderPane pane = new BorderPane();
-        if (img != null) {
-            StackPane imagePane = new StackPane(new ImageView(img));
-            imagePane.setPadding(new Insets(10, 10, 10, 10));
-            pane.setLeft(imagePane);
-        }
-
-		GridPane grid = new GridPane();
-		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-		grid.setPadding(new Insets(25, 25, 25, 25));
-
-		Label helpText = new Label("You can chose to sync your project with Dropbox or to use it locally");
-		grid.add(helpText, 0, 0);
-
-		Label userName = new Label("User Name:");
-		grid.add(userName, 0, 2);
-
-		TextField userTextField = new TextField();
-		grid.add(userTextField, 1, 2);
-
-		Label pw = new Label("Password:");
-		grid.add(pw, 0, 3);
-
-		PasswordField pwBox = new PasswordField();
-		grid.add(pwBox, 1, 3);
-
-		ButtonType connectBtn = new ButtonType("Connect", ButtonData.OK_DONE);
-        pane.setCenter(grid);
-        dialog.getDialogPane().setContent(pane);
-        dialog.getDialogPane().getButtonTypes().setAll(new ButtonType("Use local files"), connectBtn);
-        Optional<ButtonType> result = dialog.showAndWait();
-
-		if (result.isPresent() && connectBtn.equals(result.get())) {
-			String username = userTextField.getText();
-			String password = pwBox.getText();
-			PathCommand dropboxConnectCommand = new DropboxConnectCommand(this, username, password);
-			dropboxConnectCommand.run();
-		}
+		PathCommand dropboxConnectCommand = new DropboxConnectCommand(this);
+		dropboxConnectCommand.run();
     }
 	
 	/**
@@ -1473,14 +1429,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
         return null;
 	}
 
-    private Image loadDropboxIcon(int size) {
-        String path = "icons/dropbox_" + size + ".png";
-        Image img = getImage(path);
-        if (img != null) return img;
-        return null;
-    }
-
-    private Image getImage(String path) {
+    public Image getImage(String path) {
         try (InputStream stream = getClassLoader().getResourceAsStream(path)) {
             if (stream != null) {
                 BufferedImage img = ImageIO.read(stream);
