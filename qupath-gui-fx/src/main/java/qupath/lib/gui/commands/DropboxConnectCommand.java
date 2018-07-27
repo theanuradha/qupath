@@ -3,8 +3,10 @@ package qupath.lib.gui.commands;
 import com.dropbox.core.*;
 import com.dropbox.core.json.JsonReader;
 import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.*;
+import com.dropbox.core.v2.sharing.AddMember;
 import com.dropbox.core.v2.sharing.ListFoldersResult;
-import com.dropbox.core.v2.sharing.ListSharedLinksResult;
+import com.dropbox.core.v2.sharing.MemberSelector;
 import com.dropbox.core.v2.users.FullAccount;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -16,6 +18,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import org.apache.commons.io.FileUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -29,12 +32,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.util.*;
+import java.util.List;
 
 public class DropboxConnectCommand implements PathCommand {
 
     private final QuPathGUI qupath;
     private final String dbxTokenFile = "dbx_token.json";
+    private final String ROOT_FOLDER_ATTR = "root_folder";
+    private final String SHARE_WITH_TEAM_ATTR = "share_with_team";
+    private final String SHARED_WITH_ATTR = "shared_with";
 
     public DropboxConnectCommand(final QuPathGUI qupath) {
         this.qupath = qupath;
@@ -72,11 +79,16 @@ public class DropboxConnectCommand implements PathCommand {
         return f.exists() && !f.isDirectory();
     }
 
-    private String getDropboxRootPath(String configFilePath)
+    private Map<String, Object> getDropboxConfig(String configFilePath)
             throws IOException, ParseException {
+        Map<String, Object> ret = new HashMap<>();
+
         JSONParser parser = new JSONParser();
         JSONObject obj = (JSONObject) parser.parse(new FileReader(configFilePath));
-        return (String) obj.get("root_folder");
+        ret.put(ROOT_FOLDER_ATTR, obj.get(ROOT_FOLDER_ATTR));
+        ret.put(SHARE_WITH_TEAM_ATTR, Boolean.valueOf((String) obj.get(SHARE_WITH_TEAM_ATTR)));
+        ret.put(SHARED_WITH_ATTR, obj.get(SHARED_WITH_ATTR));
+        return ret;
     }
 
     private Image loadDropboxIcon(int size) {
@@ -135,8 +147,13 @@ public class DropboxConnectCommand implements PathCommand {
             DbxRequestConfig requestConfig = new DbxRequestConfig("qupath_projects");
             URL dropboxJsonUrl = this.getClass().getResource("/dropbox.json");
             String configFilePath = dropboxJsonUrl.getPath();
-            String dbxRootPath = getDropboxRootPath(configFilePath);
+            Map<String, Object> dbxConfig = getDropboxConfig(configFilePath);
+            String dbxRootPath = (String) dbxConfig.get(ROOT_FOLDER_ATTR);
+            boolean shareWithTeam = (Boolean) dbxConfig.get(SHARE_WITH_TEAM_ATTR);
+            List<String> shareUserList = (List<String>) dbxConfig.get(SHARED_WITH_ATTR);
+
             String accessToken = null;
+
             // Read app info file (contains app key and app secret)
             DbxAppInfo appInfo = DbxAppInfo.Reader.readFromFile(configFilePath);
 
@@ -156,29 +173,37 @@ public class DropboxConnectCommand implements PathCommand {
             DbxClientV2 client = new DbxClientV2(requestConfig, accessToken);
             FullAccount account = client.users().getCurrentAccount();
 
-            ListSharedLinksResult listSharedLinksResult = client.sharing()
-                    .listSharedLinksBuilder()
-                    .withPath(dbxRootPath).withDirectOnly(true)
-                    .start();
-
-            //            try (InputStream in = new FileInputStream(configFilePath)) {
-//                FileMetadata metadata = client.files().uploadBuilder(dbxRootPath)
-//                        .uploadAndFinish(in);
-//            }
-
             // Get files and folder metadata from Dropbox root directory
-            ListFoldersResult result = client.sharing().listFolders();
-//            while (true) {
-//                for (SharedFolderMetadata metadata : result.getEntries()) {
-//                    System.out.println(metadata.getPathLower());
-//                }
-//
-//                if (!result.) {
-//                    break;
-//                }
-//
-//                result = client.sharing().listFoldersContinue(result.getCursor());
+            String qupathFolder = "/" + account.getName().getGivenName() + "_" +
+                    account.getName().getSurname() + "_qupath_projects";
+            try {
+                client.files().createFolderV2(qupathFolder);
+            } catch (CreateFolderErrorException ignored) { }
+
+            String qupathFolderId = ((FolderMetadata) client.files().getMetadata(qupathFolder)).getId();
+            List<AddMember> shareWithList = new ArrayList<>();
+//            if (shareWithTeam && account.getTeam() != null) {
+//                shareWithList.add(new AddMember(MemberSelector.dropboxId(account.getTeam().getId())));
 //            }
+
+            for (String user: shareUserList) {
+                shareWithList.add(new AddMember(MemberSelector.email(user)));
+            }
+            // https://stackoverflow.com/questions/33592326/dropbox-api-v2-returns-invalid-shared-folder-id
+            ListFoldersResult resultShare = client.sharing().listFolders();
+            ListFolderResult result = client.files().listFolder("");
+            client.sharing().addFolderMember(qupathFolderId, shareWithList);
+            while (true) {
+                for (Metadata metadata : result.getEntries()) {
+                    System.out.println(metadata.getPathLower());
+                }
+
+                if (!result.getHasMore()) {
+                    break;
+                }
+
+                result = client.files().listFolderContinue(result.getCursor());
+            }
             int e = 0;
 
             // TODO Once the temp folder is synchronized use the project files in there

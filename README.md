@@ -111,3 +111,16 @@ And click `OK`
 
 1. Finally click on the play button next to the QuPath configuration you just created to launch the app
 ![Image](./images/idea15.png)
+
+
+### Setup dropbox access
+
+You need to provide a `dropbox.json` file in `src/main/resources` filled like this:
+```
+{
+  "key": "your_app_key",
+  "secret": "your_app_secret",
+  "share_with_team": "true",
+  "shared_with": ["email@tuatini.me"]
+}
+```
