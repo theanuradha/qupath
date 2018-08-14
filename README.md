@@ -96,18 +96,13 @@ then click apply.
 N.B: If you're not interested by debugging and just want to run the program right away just run the 
 `qupath > qupath > Tasks > javafx > jfxRun` command and ignore the steps below.
 
-1. Go back in the `Project structure` menu and now click on `Modules` then `qupath > qupath_main`, the
-`Dependencies` tab and the `+` sign. On the `+` sign click `1 JARs or directory...`
-and navigate to `build/jfx/app` and click "Open". You should now have a dependency named 
-"app and one more file", now click `OK`.
-![Image](./images/idea13.png)
-
 1. Go into `Edit configuration` and add click the `+` button to add an Application configuration
 and complete it as below:
 ![Image](./images/idea2.png)
 then:
 ![Image](./images/idea14.png)
-And click `OK`
+
+Then in the "Program arguments:" text area enter: `-Djava.library.path="./build/additional/"` and click `OK`.
 
 1. Finally click on the play button next to the QuPath configuration you just created to launch the app
 ![Image](./images/idea15.png)
