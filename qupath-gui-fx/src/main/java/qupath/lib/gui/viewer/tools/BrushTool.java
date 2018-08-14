@@ -149,7 +149,7 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+		if (!checkIfActionValid(viewer.getSelectedObject())) {
 			return;
 		}
 
@@ -195,6 +195,9 @@ public class BrushTool extends AbstractPathROITool {
 						break;
 					}
 				}
+				if (!checkIfActionValid(objectSelectable)) {
+					return;
+				}
 				if (objectSelectable != null) {
 					createNew = false;
 					viewer.setSelectedObject(objectSelectable);
@@ -228,7 +231,7 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+		if (!checkIfActionValid(viewer.getSelectedObject())) {
 			return;
 		}
 
@@ -328,7 +331,7 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if (!checkIfActionValid(viewer.getSelectedObject(), true)) {
+		if (!checkIfActionValid(viewer.getSelectedObject())) {
 			return;
 		}
 		super.mouseReleased(e);

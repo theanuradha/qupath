@@ -62,18 +62,18 @@ public abstract class AbstractPathTool implements PathTool, QuPathViewerListener
 		this.modes = modes;
 	}
 
-	protected boolean checkIfActionValid(PathObject object, boolean showMessage) {
+	protected boolean checkIfActionValid(PathObject object) {
 		if (QuPathGUI.getInstance().getUserProfileChoice() == QuPathGUI.UserProfileChoice.CONTRACTOR_MODE &&
 				object != null) {
-			if (object.getPathClass() != null && object.getPathClass().getName().startsWith("ROI_")) {
-				if (showMessage) {
-					DisplayHelpers.showWarningNotification("Invalid action",
-							"You cannot move/delete/expand ROI annotations in contractor mode");
-				}
-				return false;
-			}
+			return object.getPathClass() == null || !object.getPathClass().getName().startsWith("ROI_");
 		}
 		return true;
+	}
+
+	protected void showInvalidActionNotification() {
+		DisplayHelpers.showWarningNotification("Invalid action",
+				"You cannot move/delete/expand ROI annotations in " +
+						QuPathGUI.getInstance().getUserProfileChoice());
 	}
 
 	void ensureCursorType(Cursor cursor) {
