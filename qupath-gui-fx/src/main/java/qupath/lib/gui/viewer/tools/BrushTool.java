@@ -149,6 +149,10 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
+		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+			return;
+		}
+
 		if (!e.isPrimaryButtonDown() || e.isConsumed()) {
 			return;
 		}
@@ -224,18 +228,22 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
+		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+			return;
+		}
+
 		// Note: if the 'freehand' part of the polygon creation isn't desired, just comment out this whole method
 		super.mouseDragged(e);
-		
+
 		ensureCursorType(getRequestedCursor());
 		if (!e.isPrimaryButtonDown()) {
             return;
         }
-		
+
 		ROI currentROI = viewer.getCurrentROI();
 		if (!(currentROI instanceof PathShape))
 			return;
-		
+
 		// Can only modify annotations
 		// TODO: Check for object being locked!
 		PathObject pathObject = viewer.getSelectedObject();
@@ -243,7 +251,7 @@ public class BrushTool extends AbstractPathROITool {
 				return;
 
 		PathShape shapeROI = (PathShape)currentROI;
-		
+
 		PathObject pathObjectUpdated = getUpdatedObject(e, shapeROI, pathObject, -1);
 		viewer.setSelectedObject(pathObjectUpdated);
 	}
@@ -320,6 +328,9 @@ public class BrushTool extends AbstractPathROITool {
 	
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if (!checkIfActionValid(viewer.getSelectedObject(), true)) {
+			return;
+		}
 		super.mouseReleased(e);
 		
 		ensureCursorType(Cursor.DEFAULT);

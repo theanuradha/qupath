@@ -34,6 +34,8 @@ import java.util.List;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
+import qupath.lib.gui.QuPathGUI;
+import qupath.lib.gui.helpers.DisplayHelpers;
 import qupath.lib.gui.viewer.ModeWrapper;
 import qupath.lib.gui.viewer.QuPathViewer;
 import qupath.lib.gui.viewer.QuPathViewerListener;
@@ -59,7 +61,21 @@ public abstract class AbstractPathTool implements PathTool, QuPathViewerListener
 	AbstractPathTool(ModeWrapper modes) {
 		this.modes = modes;
 	}
-	
+
+	protected boolean checkIfActionValid(PathObject object, boolean showMessage) {
+		if (QuPathGUI.getInstance().getUserProfileChoice() == QuPathGUI.UserProfileChoice.CONTRACTOR_MODE &&
+				object != null) {
+			if (object.getPathClass() != null && object.getPathClass().getName().startsWith("ROI_")) {
+				if (showMessage) {
+					DisplayHelpers.showWarningNotification("Invalid action",
+							"You cannot move/delete/expand ROI annotations in contractor mode");
+				}
+				return false;
+			}
+		}
+		return true;
+	}
+
 	void ensureCursorType(Cursor cursor) {
 //		System.err.println(cursor);
 		// We don't want to change a waiting cursor unnecessarily

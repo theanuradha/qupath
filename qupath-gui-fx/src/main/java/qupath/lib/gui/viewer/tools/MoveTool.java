@@ -82,7 +82,9 @@ public class MoveTool extends AbstractPathTool {
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		
+		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+			return;
+		}
 		mover.stopMoving();
 		
 		super.mousePressed(e);
@@ -171,7 +173,9 @@ public class MoveTool extends AbstractPathTool {
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		
+		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+			return;
+		}
 		mover.stopMoving();
 		
 		super.mouseDragged(e);
@@ -260,6 +264,10 @@ public class MoveTool extends AbstractPathTool {
 		super.mouseReleased(e);
 		if (e.isConsumed())
 			return;
+
+		if (!checkIfActionValid(viewer.getSelectedObject(), true)) {
+			return;
+		}
 		
 		RoiEditor editor = viewer.getROIEditor();
 		if (editor != null && (editor.hasActiveHandle() || editor.isTranslating())) {
@@ -319,6 +327,9 @@ public class MoveTool extends AbstractPathTool {
 	
 	@Override
 	public void mouseMoved(MouseEvent e) {
+		if (!checkIfActionValid(viewer.getSelectedObject(), false)) {
+			return;
+		}
 		super.mouseMoved(e);
 		
 		// We don't want to change a waiting cursor unnecessarily
