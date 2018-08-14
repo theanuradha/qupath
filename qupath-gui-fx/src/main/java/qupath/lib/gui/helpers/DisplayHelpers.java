@@ -615,7 +615,8 @@ public class DisplayHelpers {
             return false;
 
         if (QuPathGUI.getInstance().getUserProfileChoice() == QuPathGUI.UserProfileChoice.CONTRACTOR_MODE) {
-            if (pathObjectSelected.getPathClass().getName().contains("ROI_")) {
+            if (pathObjectSelected.getPathClass() != null &&
+                    pathObjectSelected.getPathClass().getName().contains("ROI_")) {
                 DisplayHelpers.showMessageDialog("Warning", "ROI annotations cannot be deleted in contractor mode!");
                 return false;
             }
