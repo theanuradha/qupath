@@ -91,7 +91,6 @@ public class SerializeImageDataCommand implements PathCommand {
     }
 
     private int backupProject() {
-
         StringBuilder sb = new StringBuilder();
         String backupsOutput = QPEx.buildFilePath(QPEx.PROJECT_BASE_DIR, "backups");
         QPEx.mkdirs(backupsOutput);
@@ -119,6 +118,9 @@ public class SerializeImageDataCommand implements PathCommand {
             walkFiles(zipfs, baseDir.toPath().toString(), thumbnailsDir);
             return 1;
         } catch (IOException e) {
+            TextArea textArea = new TextArea();
+            textArea.setText(e.getMessage());
+            DisplayHelpers.showMessageDialog("Error to report to the devs", textArea);
             logger.error(e.getMessage());
         }
         return -1;
@@ -176,8 +178,10 @@ public class SerializeImageDataCommand implements PathCommand {
                 ImageServer<?> server = imageData.getServer();
                 file = qupath.getDialogHelper().promptToSaveFile(null, null, server.getShortServerName(), "QuPath Serialized Data", PathPrefs.getSerializationExtension());
             }
-            if (file == null)
+            if (file == null) {
+                DisplayHelpers.showErrorMessage("Error", "Project file wasn't retrieved properly");
                 return -1;
+            }
 
             PathIO.writeImageData(file, imageData);
 
