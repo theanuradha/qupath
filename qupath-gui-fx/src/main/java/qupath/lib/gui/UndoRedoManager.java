@@ -104,8 +104,7 @@ public class UndoRedoManager implements ChangeListener<QuPathViewerPlus>, QuPath
 	
 	/**
 	 * Request to 'undo' the last observed hierarchy change for the current active viewer.
-	 * 
-	 * @param viewer
+	 *
 	 * @return True if any changes were made, false otherwise.
 	 */
 	public boolean undoOnce() {
@@ -114,8 +113,7 @@ public class UndoRedoManager implements ChangeListener<QuPathViewerPlus>, QuPath
 	
 	/**
 	 * Request to 'redo' the last 'undone' hierarchy change for the current active viewer.
-	 * 
-	 * @param viewer
+	 *
 	 * @return True if any changes were made, false otherwise.
 	 */
 	public boolean redoOnce() {
@@ -239,6 +237,7 @@ public class UndoRedoManager implements ChangeListener<QuPathViewerPlus>, QuPath
 		private byte[] current = null;
 		private Deque<byte[]> undoStack = new ArrayDeque<>();
 		private Deque<byte[]> redoStack = new ArrayDeque<>();
+		private boolean isFirstHierarchyChange = true;
 		
 		SerializableUndoRedoStack(T object) {
 			current = serialize(object, 1024);
@@ -306,7 +305,13 @@ public class UndoRedoManager implements ChangeListener<QuPathViewerPlus>, QuPath
 			if (current != null) {
 				// Default to something a bit bigger than the last things we had
 				initialSize = (int)(current.length * 1.1);
-				undoStack.push(current);
+
+				// Don't add the first undo or the user will be able to remove everything in the hierarchy
+				if (isFirstHierarchyChange) {
+					isFirstHierarchyChange = false;
+				} else {
+					undoStack.push(current);
+				}
 			}
 			current = serialize(object, initialSize);
 			// Reset the ability to redo
