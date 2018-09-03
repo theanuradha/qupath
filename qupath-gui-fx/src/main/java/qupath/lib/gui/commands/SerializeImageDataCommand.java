@@ -24,8 +24,7 @@
 package qupath.lib.gui.commands;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -33,6 +32,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javafx.scene.control.TextArea;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class SerializeImageDataCommand implements PathCommand {
     final private static Logger logger = LoggerFactory.getLogger(SerializeImageDataCommand.class);
     private WorkIndicatorDialog wd;
     final private QuPathGUI qupath;
-    private boolean overwriteExisting = false;
+    private boolean overwriteExisting;
     private boolean showSavePopUp;
 
     public SerializeImageDataCommand(final QuPathGUI qupath, final boolean overwriteExisting,
@@ -68,26 +69,28 @@ public class SerializeImageDataCommand implements PathCommand {
         this.showSavePopUp = showSavePopUp;
     }
 
-    private void walkFiles(FileSystem zipfs, String baseDir, String directory) throws IOException {
-        Files.walkFileTree(Paths.get(directory), new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file,
-                                             BasicFileAttributes attrs) throws IOException {
-                final Path dest = zipfs.getPath(new File(baseDir).toURI().relativize(file.toUri()).getPath());
-                Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir,
-                                                     BasicFileAttributes attrs) throws IOException {
-                final Path dirToCreate = zipfs.getPath(new File(baseDir).toURI().relativize(dir.toUri()).getPath());
-                if (Files.notExists(dirToCreate)) {
-                    Files.createDirectories(dirToCreate);
+    private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
+        if (fileToZip.isHidden()) {
+            return;
+        }
+        if (fileToZip.isDirectory()) {
+            File[] children = fileToZip.listFiles();
+            if (children != null) {
+                for (File childFile : children) {
+                    zipFile(childFile, fileName + "/" + childFile.getName(), zipOut);
                 }
-                return FileVisitResult.CONTINUE;
             }
-        });
+            return;
+        }
+        FileInputStream fis = new FileInputStream(fileToZip);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipOut.putNextEntry(zipEntry);
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+        fis.close();
     }
 
     private int backupProject() {
@@ -103,19 +106,21 @@ public class SerializeImageDataCommand implements PathCommand {
         // Create a backup name
         LocalDateTime currentTime = LocalDateTime.now();
         String time = currentTime.toString().replace("-", "").replace(':', '.');
-        time = time.split("\\.")[0] + "." + time.split("\\.")[1];
+        time = time.split("\\.")[0]; // Erase save every hour
         sb.append(backupsOutput).append(File.separator).append(time).append(".zip");
 
-        // Create the backup
-        Map<String, String> env = new HashMap<>();
-        env.put("create", "true");
+        try {
+            FileOutputStream fos = new FileOutputStream(sb.toString());
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
 
-        URI uri = URI.create("jar:" + new File(sb.toString()).toURI());
-
-        try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
-            walkFiles(zipfs, baseDir.toPath().toString(), dataDir);
-            walkFiles(zipfs, baseDir.toPath().toString(), qprojFile);
-            walkFiles(zipfs, baseDir.toPath().toString(), thumbnailsDir);
+            File file = new File(dataDir);
+            zipFile(file, file.getName(), zipOut);
+            file = new File(qprojFile);
+            zipFile(file, file.getName(), zipOut);
+            file = new File(thumbnailsDir);
+            zipFile(file, file.getName(), zipOut);
+            zipOut.close();
+            fos.close();
             return 1;
         } catch (IOException e) {
             TextArea textArea = new TextArea();
@@ -128,7 +133,6 @@ public class SerializeImageDataCommand implements PathCommand {
 
     @Override
     public void run() {
-
         wd = new WorkIndicatorDialog(qupath.getStage().getScene().getWindow(),
                 "Saving data...");
 
