@@ -2237,7 +2237,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 }
                 if (rotate180)
                     serverNew = new RotatedImageServer(serverNew);
-                ImageData<BufferedImage> imageData = serverNew == null ? null : createNewImageData(serverNew); // TODO: DEAL WITH PATHOBJECT HIERARCHIES!
+                ImageData<BufferedImage> imageData = createNewImageData(serverNew); // TODO: DEAL WITH PATHOBJECT HIERARCHIES!
 
                 viewer.setImageData(imageData);
                 setInitialLocationAndMagnification(viewer);
