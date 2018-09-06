@@ -138,6 +138,7 @@ public class ImageOverview implements QuPathViewerListener {
 		g.clearRect(0, 0, w, h);
 		
 		if (viewer == null || !viewer.hasServer()) {
+			repaintRequested = false;
 			return;
 		}
 		
