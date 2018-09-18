@@ -85,6 +85,7 @@ import qupath.lib.display.ChannelDisplayInfo;
 import qupath.lib.display.ImageDisplay;
 import qupath.lib.gui.ImageDataChangeListener;
 import qupath.lib.gui.ImageDataWrapper;
+import qupath.lib.gui.QuPathApp;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.QuPathGUI.GUIActions;
 import qupath.lib.gui.helpers.DisplayHelpers;
@@ -945,8 +946,7 @@ public class ProjectBrowser implements ImageDataChangeListener<BufferedImage> {
                 if (currentProfileChoice == QuPathGUI.UserProfileChoice.SPECIALIST_MODE ||
                         currentProfileChoice == QuPathGUI.UserProfileChoice.ADMIN_MODE) {
                     return true;
-                }
-                else {
+                } else {
                     return currentProfileChoice.getHierarchyLevel() == validatedBy.getHierarchyLevel() ||
                             currentProfileChoice.getHierarchyLevel() + 1 == validatedBy.getHierarchyLevel();
                 }
@@ -979,7 +979,10 @@ public class ProjectBrowser implements ImageDataChangeListener<BufferedImage> {
                     }
                 }
             }
-            if (items.size() == 0) {
+
+            QuPathGUI.UserProfileChoice currentProfileChoice = QuPathGUI.getInstance().getUserProfileChoice();
+            if (items.size() == 0 && currentProfileChoice != QuPathGUI.UserProfileChoice.SPECIALIST_MODE &&
+                    currentProfileChoice != QuPathGUI.UserProfileChoice.ADMIN_MODE) {
                 DisplayHelpers.showConfirmDialog("No entry found", "No WSI found to annotate in " +
                         QuPathGUI.getInstance().getUserProfileChoice().toString());
             }
