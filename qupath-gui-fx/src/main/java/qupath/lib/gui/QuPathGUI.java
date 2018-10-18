@@ -515,6 +515,13 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 
         stage.setOnCloseRequest(e -> {
 
+            // Release lock
+            Project<BufferedImage> localProject = this.getProject();
+            if (localProject != null) {
+                localProject.setLockOn(false);
+                ProjectIO.writeProject(localProject);
+            }
+
             Set<QuPathViewer> unsavedViewers = new LinkedHashSet<>();
             for (QuPathViewer viewer : viewerManager.getViewers()) {
                 if (viewer.getImageData() != null && viewer.getImageData().isChanged())

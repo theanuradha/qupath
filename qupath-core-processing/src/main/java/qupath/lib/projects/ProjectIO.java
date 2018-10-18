@@ -183,6 +183,7 @@ public class ProjectIO {
 		JsonObject builder = new JsonObject();
 		builder.addProperty("createTimestamp", project.getCreationTimestamp());
 		builder.addProperty("modifyTimestamp", project.getModificationTimestamp());
+		builder.addProperty("locked", project.isLockOn());
 		if (pathClassArray != null) {
 			builder.add("pathClasses", pathClassArray);
 		}

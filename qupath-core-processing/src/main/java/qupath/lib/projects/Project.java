@@ -54,6 +54,7 @@ public class Project<T> {
 	private File dirBase;
 	private Class<T> cls;
 	private String name = null;
+	private boolean isLockOn = false;
 	
 	private List<PathClass> pathClasses = new ArrayList<>();
 
@@ -217,9 +218,16 @@ public class Project<T> {
 	public long getModificationTimestamp() {
 		return modificationTimestamp;
 	}
-	
-	
-	
+
+	public boolean isLockOn() {
+		return isLockOn;
+	}
+
+	public void setLockOn(boolean lockOn) {
+		isLockOn = lockOn;
+	}
+
+
 	static class ImageEntryComparator implements Comparator<ProjectImageEntry<?>> {
 
 		static ImageEntryComparator instance = new ImageEntryComparator();
