@@ -78,6 +78,11 @@ public class ProjectIO {
 			
 			project.creationTimestamp = element.get("createTimestamp").getAsLong();
 			project.modificationTimestamp = element.get("modifyTimestamp").getAsLong();
+
+			JsonElement lock = element.get("locked");
+			if (lock != null) {
+				project.setLockOn(lock.getAsBoolean());
+			}
 			
 			JsonElement pathClassesElement = element.get("pathClasses");
 			if (pathClassesElement != null && pathClassesElement.isJsonArray()) {

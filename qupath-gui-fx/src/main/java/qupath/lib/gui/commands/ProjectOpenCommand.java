@@ -62,16 +62,13 @@ public class ProjectOpenCommand implements PathCommand {
         try {
             Project<BufferedImage> project = ProjectIO.loadProject(fileProject, BufferedImage.class);
             if (project.isLockOn()) {
-                List<String> choices = new ArrayList<>();
-                choices.add("Cancel project opening");
-                choices.add("Force lock");
-                String choice = (String) DisplayHelpers.showChoiceDialog("Lock detected",
-                        "Sorry but someone else is currently working on this project. Please wait for him to finish or click force lock below",
-                        choices.toArray(), choices.get(0));
-                if (choice == null || choice.equals(choices.get(0))) {
+                String output = DisplayHelpers.showInputDialog("Lock detected",
+                        "Sorry but someone else is currently working on this project.\n" +
+                                "If you want to force the access to the project please type \"Force the lock\" in the input box\n" +
+                                "Be aware this is not recommended and can create conflicting files!\n" +
+                                "With great power comes great responsibilities!", "");
+                if (output == null || !output.toLowerCase().equals("force the lock")) {
                     return;
-                } else {
-                    // TODO finish
                 }
             }
 
