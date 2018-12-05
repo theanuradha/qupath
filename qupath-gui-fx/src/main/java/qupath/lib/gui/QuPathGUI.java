@@ -27,6 +27,7 @@ import java.awt.Desktop;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -163,6 +164,7 @@ import qupath.lib.algorithms.TilerPlugin;
 import qupath.lib.common.GeneralTools;
 import qupath.lib.common.SimpleThreadFactory;
 import qupath.lib.common.URLTools;
+import qupath.lib.geom.Point2;
 import qupath.lib.gui.commands.*;
 import qupath.lib.gui.commands.TMAGridAdd.TMAAddType;
 import qupath.lib.gui.commands.TMAGridRemove.TMARemoveType;
@@ -223,11 +225,7 @@ import qupath.lib.images.stores.DefaultImageRegionStore;
 import qupath.lib.images.stores.ImageRegionStore;
 import qupath.lib.images.stores.ImageRegionStoreFactory;
 import qupath.lib.io.PathIO;
-import qupath.lib.objects.PathAnnotationObject;
-import qupath.lib.objects.PathCellObject;
-import qupath.lib.objects.PathDetectionObject;
-import qupath.lib.objects.PathObject;
-import qupath.lib.objects.TMACoreObject;
+import qupath.lib.objects.*;
 import qupath.lib.objects.classes.PathClass;
 import qupath.lib.objects.classes.PathClassFactory;
 import qupath.lib.objects.helpers.PathObjectTools;
@@ -248,6 +246,8 @@ import qupath.lib.projects.Project;
 import qupath.lib.projects.ProjectIO;
 import qupath.lib.projects.ProjectImageEntry;
 import qupath.lib.roi.PathROIToolsAwt;
+import qupath.lib.roi.PolygonROI;
+import qupath.lib.roi.RoiEditor;
 import qupath.lib.roi.interfaces.ROI;
 import qupath.lib.roi.interfaces.TranslatableROI;
 import qupath.lib.scripting.DefaultScriptEditor;
@@ -286,6 +286,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 
     private static ExtensionClassLoader extensionClassLoader = new ExtensionClassLoader();
     private ServiceLoader<QuPathExtension> extensionLoader = ServiceLoader.load(QuPathExtension.class, extensionClassLoader);
+    private Point2D activeEditorPoint;
 
     public UserProfileChoice getUserProfileChoice() {
         return profileChoice;
@@ -1841,9 +1842,55 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
             }
         });
 
+        MenuItem addPointToObject = new MenuItem("Add Point");
+        addPointToObject.setOnAction(e -> {
+            PathROIObject pathObject = (PathROIObject) viewer.getSelectedObject();
+            PolygonROI polygonROI = (PolygonROI) pathObject.getROI();
+
+
+            List<Point2> points = polygonROI.getVertices().getPoints();
+            Point2 newPoint = new Point2(activeEditorPoint.getX(),activeEditorPoint.getY());
+            Point2 nextdoor = points.stream().reduce((x, y) -> x.distance(newPoint) < y.distance(newPoint) ? x : y).get();
+            int index = points.indexOf(nextdoor);
+            points.add(index+1,newPoint);
+            ROI roiUpdated = new PolygonROI(points, polygonROI.getC(), polygonROI.getZ(), polygonROI.getT());
+             pathObject.setROI(roiUpdated);
+				viewer.getHierarchy().fireObjectsChangedEvent(this, Collections.singleton(pathObject));
+
+
+        });
+
+
+
+
+        MenuItem removePointToObject = new MenuItem("Remove Point");
+        removePointToObject.setOnAction(e -> {
+            PathROIObject pathObject = (PathROIObject) viewer.getSelectedObject();
+            PolygonROI polygonROI = (PolygonROI) pathObject.getROI();
+
+
+            List<Point2> points = polygonROI.getVertices().getPoints();
+            Point2 newPoint = new Point2(activeEditorPoint.getX(),activeEditorPoint.getY());
+            Point2 nextdoor = points.stream().reduce((x, y) -> x.distance(newPoint) < y.distance(newPoint) ? x : y).get();
+
+            points.remove(nextdoor);
+            ROI roiUpdated = new PolygonROI(points, polygonROI.getC(), polygonROI.getZ(), polygonROI.getT());
+            pathObject.setROI(roiUpdated);
+            viewer.getHierarchy().fireObjectsChangedEvent(this, Collections.singleton(pathObject));
+
+
+        });
+
+        Menu polygon = createMenu(
+                "Polygon",
+                addPointToObject,
+                removePointToObject
+                );
+
 
         SeparatorMenuItem topSeparator = new SeparatorMenuItem();
         popup.setOnShowing(e -> {
+
             // Check if we have any cells
             ImageData<?> imageData = viewer.getImageData();
             if (imageData == null)
@@ -1855,6 +1902,9 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
             // Check what to show for TMA cores or annotations
             PathObject pathObject = viewer.getSelectedObject();
             menuTMA.setVisible(false);
+            addPointToObject.setVisible(false);
+            removePointToObject.setVisible(false);
+            polygon.setVisible(false);
             if (pathObject instanceof TMACoreObject) {
                 boolean isMissing = ((TMACoreObject) pathObject).isMissing();
                 miTMAValid.setSelected(!isMissing);
@@ -1864,6 +1914,21 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 boolean isLocked = ((PathAnnotationObject) pathObject).isLocked();
                 miLockAnnotations.setSelected(isLocked);
                 miUnlockAnnotations.setSelected(!isLocked);
+            }
+
+            if (pathObject instanceof PathAnnotationObject) {
+                boolean isLocked = ((PathAnnotationObject) pathObject).isLocked();
+                addPointToObject.setVisible(!isLocked && pathObject.getROI() instanceof PolygonROI );
+
+                if(addPointToObject.isVisible()) {
+                    PolygonROI polygonROI = (PolygonROI) pathObject.getROI();
+
+
+                    List<Point2> points = polygonROI.getVertices().getPoints();
+                    Point2 newPoint = new Point2(activeEditorPoint.getX(),activeEditorPoint.getY());
+                    Point2 nextdoor = points.stream().reduce((x, y) -> x.distance(newPoint) < y.distance(newPoint) ? x : y).get();
+                    removePointToObject.setVisible(nextdoor.distance(newPoint)<5);
+                }
             }
 
             // Add clear objects option if we have more than one non-TMA object
@@ -1882,6 +1947,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
             updateSetAnnotationPathClassMenu(menuSetClass, viewer);
             menuCombine.setVisible(pathObject instanceof PathAnnotationObject);
             topSeparator.setVisible(pathObject instanceof PathAnnotationObject || pathObject instanceof TMACoreObject);
+            polygon.setVisible(removePointToObject.isVisible() || addPointToObject.isVisible());
             // Occasionally, the newly-visible top part of a popup menu can have the wrong size?
             popup.setWidth(popup.getPrefWidth());
         });
@@ -1890,6 +1956,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 //		popup.add(menuClassify);
         popup.getItems().addAll(
                 miClearSelectedObjects,
+                polygon,
                 menuTMA,
                 menuSetClass,
                 menuCombine,
@@ -1915,6 +1982,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 circlePopup.hide();
 
             if (e.getButton() == MouseButton.SECONDARY) {
+                activeEditorPoint = viewer.componentPointToImagePoint(e.getX(), e.getY(), null, true);
                 popup.show(viewer.getView().getScene().getWindow(), e.getScreenX(), e.getScreenY());
                 e.consume();
             }
