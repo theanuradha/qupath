@@ -328,7 +328,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
     public enum GUIActions {
         OPEN_IMAGE, OPEN_IMAGE_OR_URL, TMA_EXPORT_DATA, SAVE_DATA, SAVE_DATA_AS,
         COPY_VIEW, COPY_WINDOW, ZOOM_IN, ZOOM_OUT, ZOOM_TO_FIT,
-        MOVE_TOOL, RECTANGLE_TOOL, ELLIPSE_TOOL, POLYGON_TOOL, BRUSH_TOOL, LINE_TOOL, POINTS_TOOL, WAND_TOOL,
+        MOVE_TOOL, RECTANGLE_TOOL, ELLIPSE_TOOL, POLYGON_TOOL, POLYGON_EDIT_TOOL, BRUSH_TOOL, LINE_TOOL, POINTS_TOOL, WAND_TOOL,
         EMBED_WAND_TOOL, BRIGHTNESS_CONTRAST,
         SHOW_OVERVIEW, SHOW_LOCATION, SHOW_SCALEBAR, SHOW_GRID, SHOW_ANALYSIS_PANEL,
         SHOW_ANNOTATIONS, FILL_ANNOTATIONS, SHOW_TMA_GRID, SHOW_TMA_GRID_LABELS, SHOW_OBJECTS, FILL_OBJECTS,
@@ -351,7 +351,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
 
     // Modes for input tools
     public enum Modes {
-        MOVE, RECTANGLE, ELLIPSE, LINE, POLYGON, BRUSH, POINTS, WAND, EMBED_WAND
+        MOVE, RECTANGLE, ELLIPSE, LINE, POLYGON,POLYGON_EDIT, BRUSH, POINTS, WAND, EMBED_WAND
     }
 
     public static final String WSI_VALIDATED = "validated_by";
@@ -1761,6 +1761,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 getActionCheckBoxMenuItem(GUIActions.ELLIPSE_TOOL, null),
                 getActionCheckBoxMenuItem(GUIActions.LINE_TOOL, null),
                 getActionCheckBoxMenuItem(GUIActions.POLYGON_TOOL, null),
+                getActionCheckBoxMenuItem(GUIActions.POLYGON_EDIT_TOOL, null),
                 getActionCheckBoxMenuItem(GUIActions.BRUSH_TOOL, null),
                 getActionCheckBoxMenuItem(GUIActions.POINTS_TOOL, null),
                 getActionCheckBoxMenuItem(GUIActions.WAND_TOOL, null),
@@ -2774,6 +2775,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 getActionCheckBoxMenuItem(GUIActions.ELLIPSE_TOOL, groupTools),
                 getActionCheckBoxMenuItem(GUIActions.LINE_TOOL, groupTools),
                 getActionCheckBoxMenuItem(GUIActions.POLYGON_TOOL, groupTools),
+                getActionCheckBoxMenuItem(GUIActions.POLYGON_EDIT_TOOL, groupTools),
                 getActionCheckBoxMenuItem(GUIActions.BRUSH_TOOL, groupTools),
                 getActionCheckBoxMenuItem(GUIActions.WAND_TOOL, groupTools),
                 getActionCheckBoxMenuItem(GUIActions.POINTS_TOOL, groupTools)
@@ -3314,6 +3316,10 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                 action = createSelectableCommandAction(new ToolSelectable(this, Modes.POLYGON), "Polygon tool", Modes.POLYGON, new KeyCodeCombination(KeyCode.P));
                 action.disabledProperty().bind(Bindings.createBooleanBinding(() -> !tools.containsKey(Modes.POLYGON), tools));
                 return action;
+            case POLYGON_EDIT_TOOL:
+                action = createSelectableCommandAction(new ToolSelectable(this, Modes.POLYGON_EDIT), "Polygon edit tool", Modes.POLYGON_EDIT, new KeyCodeCombination(KeyCode.P, KeyCombination.SHIFT_DOWN));
+                action.disabledProperty().bind(Bindings.createBooleanBinding(() -> !tools.containsKey(Modes.POLYGON_EDIT), tools));
+                return action;
             case BRUSH_TOOL:
                 action = createSelectableCommandAction(new ToolSelectable(this, Modes.BRUSH), "Brush tool", Modes.BRUSH, new KeyCodeCombination(KeyCode.B));
                 action.disabledProperty().bind(Bindings.createBooleanBinding(() -> !tools.containsKey(Modes.BRUSH), tools));
@@ -3526,6 +3532,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
         putToolForMode(Modes.LINE, new LineTool(this));
         putToolForMode(Modes.POINTS, new PointsTool(this));
         putToolForMode(Modes.POLYGON, new PolygonTool(this));
+        putToolForMode(Modes.POLYGON_EDIT, new PolygonEditTool(this));
         putToolForMode(Modes.BRUSH, new BrushTool(this));
     }
 
@@ -4018,6 +4025,7 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
             toolbar.getItems().add(qupath.getActionToggleButton(GUIActions.ELLIPSE_TOOL, true, groupTools, false));
             toolbar.getItems().add(qupath.getActionToggleButton(GUIActions.LINE_TOOL, true, groupTools, false));
             toolbar.getItems().add(qupath.getActionToggleButton(GUIActions.POLYGON_TOOL, true, groupTools, false));
+            toolbar.getItems().add(qupath.getActionToggleButton(GUIActions.POLYGON_EDIT_TOOL, true, groupTools, false));
             toolbar.getItems().add(new Separator(Orientation.VERTICAL));
             ToggleButton btnBrush = qupath.getActionToggleButton(GUIActions.BRUSH_TOOL, true, groupTools, false);
             toolbar.getItems().add(btnBrush);

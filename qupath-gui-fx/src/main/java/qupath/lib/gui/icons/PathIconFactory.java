@@ -99,6 +99,7 @@ public class PathIconFactory {
 									PLAYBACK_PLAY("\ue912"),
 									POINTS_TOOL("\ue913", PathPrefs.colorDefaultAnnotationsProperty()),
 									POLYGON_TOOL("\ue914", PathPrefs.colorDefaultAnnotationsProperty()),
+									POLYGON_EDIT_TOOL("\ue914", PathPrefs.colorAlternativeAnnotationsProperty()),
 									
 									PLAYBACK_RECORD("\ue915"),
 									RECTANGLE_TOOL("\ue916", PathPrefs.colorDefaultAnnotationsProperty()),
@@ -310,6 +311,8 @@ public class PathIconFactory {
 			return createNode(width, height, PathIcons.POINTS_TOOL);
 		case POLYGON:
 			return createNode(width, height, PathIcons.POLYGON_TOOL);
+		case POLYGON_EDIT:
+			return createNode(width, height, PathIcons.POLYGON_EDIT_TOOL);
 		case BRUSH:
 			return createNode(width, height, PathIcons.BRUSH_TOOL);
 		case WAND:
