@@ -99,7 +99,7 @@ public class PathIconFactory {
 									PLAYBACK_PLAY("\ue912"),
 									POINTS_TOOL("\ue913", PathPrefs.colorDefaultAnnotationsProperty()),
 									POLYGON_TOOL("\ue914", PathPrefs.colorDefaultAnnotationsProperty()),
-									POLYGON_EDIT_TOOL("\ue91c", PathPrefs.colorDefaultAnnotationsProperty()),
+									POLYGON_EDIT_TOOL("\ue914", PathPrefs.colorAlternativeAnnotationsProperty()),
 									
 									PLAYBACK_RECORD("\ue915"),
 									RECTANGLE_TOOL("\ue916", PathPrefs.colorDefaultAnnotationsProperty()),
