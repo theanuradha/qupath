@@ -2108,6 +2108,10 @@ public class QuPathGUI implements ModeWrapper, ImageDataWrapper<BufferedImage>, 
                             pathClassToSet.getName().startsWith("ROI_")) {
                         DisplayHelpers.showMessageDialog("Error", "You cannot assign ROI labels in contractor mode!");
                         continue;
+                    } else if (QuPathGUI.getInstance().getUserProfileChoice() == UserProfileChoice.CONTRACTOR_MODE &&
+                            pathClassToSet.getName().startsWith("Inflammation")) {
+                        DisplayHelpers.showMessageDialog("Error", "You cannot assign Inflammation labels in contractor mode!");
+                        continue;
                     }
                     pathObject.setPathClass(pathClassToSet);
                     changed.add(pathObject);
